@@ -1,18 +1,83 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.ComponentModel;
+using Microsoft.Extensions.Logging;
 
 namespace Task1
 {
+    
+    /// <summary>
+    /// некорректность схемы преобразования
+    /// </summary>
     class UnsupportedOperation : Exception
     {
-        UnsupportedOperation(char op) : base($"Operation '{op}' is unsupported")
+        public UnsupportedOperation(char op) : base($"Operation '{op}' is unsupported")
         {
         }
     }
 
+    
+    /// <summary>
+    /// несоответствие количества чисел в соответствующей строке второго файла выполняемому преобразованию:
+    /// 1. Мало
+    /// 2. Много
+    /// </summary>
     class NotEnoughNumbers : Exception
     {
         public NotEnoughNumbers(int available, string line) : base($"More than {available} numbers required in ${line}")
         {
+        }
+    }
+    class TooManyNumbers : Exception
+    {
+        public TooManyNumbers(int available, string line) : base($"Less than {available} numbers required in ${line}")
+        {
+        }
+    }
+
+    /// <summary>
+    /// Отсутствие входного файла
+    /// </summary>
+    class AbsenceOfFile : Exception
+    {
+        public AbsenceOfFile(string fileName) : base($"File {fileName} is missed")
+        {
+            
+        }
+    }
+
+    /// <summary>
+    /// разное кол-во строк в входных файлах
+    /// </summary>
+    class DifferentNumberOfLines : Exception
+    {
+        public DifferentNumberOfLines() : base($"Files have different numbers of line")
+        {
+            
+        }
+    }
+
+    class IncorrectStringFormat : Exception
+    {
+        public IncorrectStringFormat(string fileName) : base($"{fileName} have incorrect format of string")
+        {
+            
+        }
+    }
+
+    class DiscrepancyofNumbersand : Exception
+    {
+        public DiscrepancyofNumbersand(int availableNumbers, int availableSymbols) : base(
+            $"Discrepancy of {availableNumbers} numbers and {availableSymbols} symbols")
+        {
+            
+        }
+    }
+
+    class InabilityOfCreatingTheFile : Exception
+    {
+        public InabilityOfCreatingTheFile(string fileName) : base(
+            $"it is not possible to create an output file {fileName} (or a file with the same name already exists)")
+        {
+            
         }
     }
 
