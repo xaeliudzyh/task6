@@ -2,6 +2,7 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
 
+
 namespace Task1
 {
     
@@ -21,17 +22,18 @@ namespace Task1
     /// 1. Мало
     /// 2. Много
     /// </summary>
-    class NotEnoughNumbers : Exception
+    class NotEnoughArguments : Exception
     {
-        public NotEnoughNumbers(int available, string line) : base($"More than {available} numbers required in ${line}")
+        public NotEnoughArguments(int amountOfArgs) : base($"It needs than {amountOfArgs} arguments")
         {
+            
         }
     }
-    class TooManyNumbers : Exception
+    
+    class NotEnoughNumbers : Exception
     {
-        public TooManyNumbers(int available, string line) : base($"Less than {available} numbers required in ${line}")
-        {
-        }
+        public NotEnoughNumbers(int amountOfNumbers) : base(
+            $"It needs than {amountOfNumbers} nubmbers") { }
     }
 
     /// <summary>
@@ -50,29 +52,42 @@ namespace Task1
     /// </summary>
     class DifferentNumberOfLines : Exception
     {
-        public DifferentNumberOfLines() : base($"Files have different numbers of line")
+        public DifferentNumberOfLines(string fileName1, string fileName2) : base(
+            $"Files {fileName1} and {fileName2} have different numbers of line")
         {
             
         }
     }
 
+    
+    /// <summary>
+    /// неправильный формат ввода
+    /// </summary>
     class IncorrectStringFormat : Exception
     {
-        public IncorrectStringFormat(string fileName) : base($"{fileName} have incorrect format of string")
+        public IncorrectStringFormat(string line) : base($"Incorrect format of string: {line} ")
         {
             
         }
     }
 
-    class DiscrepancyofNumbersand : Exception
+    
+    /// <summary>
+    /// енсоответствие количество чисел и знаков
+    /// </summary>
+    class DiscrepancyofNumbersAndSymbols : Exception
     {
-        public DiscrepancyofNumbersand(int availableNumbers, int availableSymbols) : base(
+        public DiscrepancyofNumbersAndSymbols(int availableNumbers, int availableSymbols) : base(
             $"Discrepancy of {availableNumbers} numbers and {availableSymbols} symbols")
         {
             
         }
     }
 
+    
+    /// <summary>
+    /// енвозможно создать выходной файл или файл с таким именем уже существует
+    /// </summary>
     class InabilityOfCreatingTheFile : Exception
     {
         public InabilityOfCreatingTheFile(string fileName) : base(
@@ -139,7 +154,7 @@ namespace Task1
         /// <param name="schema"></param>
         /// <param name="numbers"></param>
         /// <returns></returns>
-        private static string FormatLhs(string schema, string[] numbers)
+        public static string FormatLhs(string schema, string[] numbers)
         {
             var equation = new StringBuilder();
             equation.Append(numbers[0]);
@@ -153,24 +168,139 @@ namespace Task1
         }
 
         
-        internal static string ProcessString(string schema, string input)
+        internal static string ProcessString(string schema, string input )
         {
             var transformation = ApplySchema(schema);
             var numbers = input.Split(",");
-            var result = transformation(numbers.Select(int.Parse).ToList());
-            return FormatLhs(schema, numbers) + $"={result}";
+            var result = "";
+
+            try
+            {
+                result = $"={transformation(numbers.Select(int.Parse).ToList())}";
+            }
+
+            catch (DivideByZeroException)
+            {
+                result = " *** DIVBYZERO";
+            }
+
+            catch(ArgumentOutOfRangeException)
+            {
+                throw new NotEnoughNumbers(numbers.Length);
+            }
+
+            catch (FormatException)
+            {
+                throw new IncorrectStringFormat(input);
+            }
+
+
+            return FormatLhs(schema, numbers) + $"{result}";
         }
 
-        internal static void ProcessFiles(string schemasFile, string dataFile, string outputFile)
+        public static string[] ReadFile(string fileName)
         {
-            TODO();
+            try
+            {
+                var data = File.ReadAllLines(fileName);
+                return data;
+            }
+            catch (FileNotFoundException)
+            {
+                throw new AbsenceOfFile(fileName);
+            } 
         }
+        
+        /// <summary>
+        /// проверка на схожесть длин файлов
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="scheme"></param>
+        /// <param name="dataName"></param>
+        /// <param name="schemeName"></param>
+        /// <exception cref="DifferentNumberOfLines"></exception>
+        public static void LengthChecking(string[] schema, string schemaName, string[] data, string dataName)
+        {
+            if (data.Length != schema.Length)
+                throw new DifferentNumberOfLines(dataName, schemaName);
+        }
+        
+        /// <summary>
+        /// записываем данные в файл
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="data"></param>
+        /// <exception cref="InabilityOfCreatingTheFile"></exception>
+        public static void WriteFile(string fileName, List<string> data)
+        {
+            try
+            {
+                var file = new StreamWriter(fileName);
+                foreach (var line in data)
+                    file.WriteLine(line);
+                file.Close();
+            }
+
+            catch (DirectoryNotFoundException)
+            {
+                throw new InabilityOfCreatingTheFile(fileName);
+            }
+        }
+
+        
+        /// <summary>
+        /// прогоняем файлы
+        /// </summary>
+        /// <param name="schemaFile"></param>
+        /// <param name="dataFile"></param>
+        /// <param name="outputFile"></param>
+        
+        internal static void ProcessFiles(string schemaFile, string dataFile, string outputFile)
+        {
+            var schema = ReadFile(schemaFile);
+            var data = ReadFile(dataFile);
+            var result = new List<string>();
+            LengthChecking(schema, schemaFile, data, dataFile);
+            for (int i = 0; i < schema.Length; i++)
+            {
+                result.Add(ProcessString(schema[i], data[i]));
+            }
+            WriteFile(outputFile, result);
+        }
+        public static (string, string, string) ArgsParsing(string[] args)
+        {
+            try
+            {
+                var schemaFile = args[0];
+                var dataFile = args[1];
+                var outputFile = args[2];
+                return (schemaFile, dataFile, outputFile);
+            }
+
+            catch (IndexOutOfRangeException)
+            {
+                throw new NotEnoughArguments(args.Length);
+            }
+        }
+
+
 
         public static void Main(string[] args)
         {
             Logger.LogInformation("program started");
-            TODO();
-            Logger.LogInformation("program completed");
+            try
+            {
+                var (schemaFile, dataFile, outputFile) = ArgsParsing(args);
+                ProcessFiles(schemaFile, dataFile, outputFile);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e.Message);
+            }
+            finally
+            {
+                Logger.LogInformation("program completed");
+            }
         }
 
         private static void TODO()
