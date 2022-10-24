@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace Task1
@@ -86,27 +87,72 @@ namespace Task1
         private static readonly ILogger<Task1> Logger =
             LoggerFactory.Create(builder => { builder.AddSimpleConsole(); }).CreateLogger<Task1>();
 
+        /// <summary>
+        /// выполнение операции
+        /// </summary>
+        /// <param name="op"></param>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        /// <returns></returns>
         internal static int ApplyOperation(char op, int arg1, int arg2)
         {
-            return TODO<int>();
+            var operations = new Dictionary<char, Func<int, int, int>>
+            {
+                { '*', (a, b) => a * b },
+                { '/', (a, b) => a / b }
+            };
+            try
+            {
+                return operations[op](arg1, arg2);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new UnsupportedOperation(op);
+            }
         }
 
+        /// <summary>
+        /// применяем схему
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <returns></returns>
         private static Func<List<int>, int> ApplySchema(string schema)
         {
             var ops = schema.ToCharArray();
             return args =>
             {
-                var res = 0;
-                TODO();
+                int res = args[0];
+
+                for (var i = 0; i < schema.Length; i++)
+                {
+                    res = ApplyOperation(ops[i], res, args[i + 1]);
+                }
+
                 return res;
             };
         }
 
+        
+        /// <summary>
+        /// конструируем вывод
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <param name="numbers"></param>
+        /// <returns></returns>
         private static string FormatLhs(string schema, string[] numbers)
         {
-            return TODO<string>();
+            var equation = new StringBuilder();
+            equation.Append(numbers[0]);
+            for (int i = 0; i < schema.Length; i++)
+            {
+                equation.Append(schema[i]);
+                equation.Append(numbers[i + 1]);
+            }
+
+            return equation.ToString();
         }
 
+        
         internal static string ProcessString(string schema, string input)
         {
             var transformation = ApplySchema(schema);
