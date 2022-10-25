@@ -24,7 +24,7 @@ namespace Task1
     /// </summary>
     class NotEnoughArguments : Exception
     {
-        public NotEnoughArguments(int amountOfArgs) : base($"It needs than {amountOfArgs} arguments")
+        public NotEnoughArguments(int amountOfArgs) : base($"It needs more than {amountOfArgs} arguments")
         {
             
         }
